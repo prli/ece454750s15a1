@@ -20,6 +20,5 @@ public class BEManagementHandler implements A1Management.Iface {
   public List<String> getGroupMembers() {
 	return groupMembers;
   }
-  
 }
 

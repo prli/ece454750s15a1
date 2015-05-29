@@ -13,36 +13,62 @@ import ece454750s15a1.*;
 
 public class FEServer {
 
-  public static PasswordServiceHandler passwordHandler;
-  public static ManagementServiceHandler managementHandler;
+  public static FEPasswordHandler passwordHandler;
+  public static FEManagementHandler managementHandler;
   
+  public static A1Password.Processor passwordProcessor;
   public static A1Management.Processor managementProcessor;
-
+  
   public static void main(String [] args) {
     try {
-
-      managementHandler = new ManagementServiceHandler();
+	  PerfCounters counter = new PerfCounters();
+	  
+      passwordHandler = new FEPasswordHandler(counter);
+      passwordProcessor = new A1Password.Processor(passwordHandler);
+	
+	  managementHandler = new FEManagementHandler(counter);
       managementProcessor = new A1Management.Processor(managementHandler);
-
-      Runnable simple = new Runnable() {
+	  
+      Runnable passwordThread = new Runnable() {
         public void run() {
-          simple(managementProcessor);
+          simple(passwordProcessor, 14950);
+        }
+      };
+	  
+	  Runnable ManagementThread = new Runnable() {
+        public void run() {
+          simple(managementProcessor, 24950);
         }
       };
 
-      new Thread(simple).start();
+      new Thread(passwordThread).start();
+	  new Thread(ManagementThread).start();
+	  
     } catch (Exception x) {
       x.printStackTrace();
     }
   }
 
-  public static void simple(A1Management.Processor processor) {
+  public static void simple(A1Password.Processor processor, int port) {
     try {
-      TServerTransport serverTransport = new TServerSocket(14950);
+      TServerTransport serverTransport = new TServerSocket(port);
       TServer server = new TSimpleServer(
               new Args(serverTransport).processor(processor));
 
-      System.out.println("Starting the FE server...");
+      System.out.println("Starting the FE password server...");
+      server.serve();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+  
+  public static void simple(A1Management.Processor processor, int port) {
+    try {
+      TServerTransport serverTransport = new TServerSocket(port);
+      TServer server = new TSimpleServer(
+              new Args(serverTransport).processor(processor));
+
+      System.out.println("Starting the FE management server...");
       server.serve();
     } catch (Exception e) {
       e.printStackTrace();

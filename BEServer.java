@@ -13,23 +13,34 @@ import ece454750s15a1.*;
 
 public class BEServer {
 
-  public static PasswordServiceHandler passwordHandler;
-  public static ManagementServiceHandler managementHandler;
+  public static BEPasswordHandler passwordHandler;
+  public static BEManagementHandler managementHandler;
   
-  public static A1Password.Processor managementProcessor;
+  public static A1Password.Processor passwordProcessor;
+  public static A1Management.Processor managementProcessor;
 
   public static void main(String [] args) {
     try {
-      passwordHandler = new PasswordServiceHandler();
-      managementProcessor = new A1Password.Processor(passwordHandler);
+      passwordHandler = new BEPasswordHandler();
+      passwordProcessor = new A1Password.Processor(passwordHandler);
+	  
+	  managementHandler = new BEManagementHandler();
+	  managementProcessor = new A1Management.Processor(managementHandler);
 
-      Runnable simple = new Runnable() {
+      Runnable psw = new Runnable() {
+        public void run() {
+          simple(passwordProcessor);
+        }
+      };
+	  
+	  Runnable manage = new Runnable() {
         public void run() {
           simple(managementProcessor);
         }
-      };      
+      };
 
-      new Thread(simple).start();
+      new Thread(psw).start();
+	  new Thread(manage).start();
     } catch (Exception x) {
       x.printStackTrace();
     }
@@ -37,7 +48,20 @@ public class BEServer {
 
   public static void simple(A1Password.Processor processor) {
     try {
-      TServerTransport serverTransport = new TServerSocket(24950);
+      TServerTransport serverTransport = new TServerSocket(34950);
+      TServer server = new TSimpleServer(
+              new Args(serverTransport).processor(processor));
+
+      System.out.println("Starting the BE server...");
+      server.serve();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+  
+  public static void simple(A1Management.Processor processor) {
+    try {
+      TServerTransport serverTransport = new TServerSocket(44950);
       TServer server = new TSimpleServer(
               new Args(serverTransport).processor(processor));
 

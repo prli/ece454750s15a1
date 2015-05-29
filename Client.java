@@ -14,74 +14,73 @@ import org.apache.thrift.protocol.TProtocol;
 
 public class Client {
   
-  private A1Password.Client m_passwordService;
-  private A1Management.Client m_managementService;
+  private static A1Password.Client m_passwordService;
+  private static A1Management.Client m_managementService;
+  
+  private static TTransport m_passwordTransport;
+  private static TTransport m_managementTransport;
 
   public static void main(String [] args) {
     try {
-      connectPasswordService("localhost", 14950);
-	  connectManagementService("localhost", 24950);
+      m_passwordService = connectPasswordService("localhost", 14950);
+	  m_managementService = connectManagementService("localhost", 24950);
 	  
       perform();
-
-      closeAllConnections();
+	  
+	  m_passwordTransport.close();
+	  m_managementTransport.close();
     } catch (TException x) {
       x.printStackTrace();
     }
   }
-
-  private static void closeAllConnections()
-  {
-	
-  }
   
-  private static A1Password.Client connectPasswordService(String addr, int port)
+  private static A1Password.Client connectPasswordService(String addr, int port) throws TException
   {
-	TTransport transport;
-	transport = new TSocket(addr, port);
-	transport.open();
+	m_passwordTransport = new TSocket(addr, port);
+	m_passwordTransport.open();
 
-	TProtocol protocol = new  TBinaryProtocol(transport);
+	TProtocol protocol = new  TBinaryProtocol(m_passwordTransport);
 	return new A1Password.Client(protocol);
   }
   
-  private static A1Management.Client connectManagementService(String addr, int port)
+  private static A1Management.Client connectManagementService(String addr, int port) throws TException
   {
-	TTransport transport;
-	transport = new TSocket(addr, port);
-	transport.open();
+	m_managementTransport = new TSocket(addr, port);
+	m_managementTransport.open();
 
-	TProtocol protocol = new  TBinaryProtocol(transport);
+	TProtocol protocol = new  TBinaryProtocol(m_managementTransport);
 	return new A1Management.Client(protocol);
   }
   
-  private static void perform(A1Password.Client FEserver) throws TException
+  private static void perform() throws TException
   {
 	try {
-		hashPassword(FEserver, "password123");
+		System.out.println(hashPassword("password123"));
+		System.out.println(getPerfCounters());
+		
 	} catch (TException x) {
       x.printStackTrace();
     }
   }
   
-  private static String hashPassword(A1Password.Client FEserver, String password) throws TException
+  private static String hashPassword(String password) throws TException
   {
-	return FEserver.hashPassword(password, (short)5);
+	return m_passwordService.hashPassword(password, (short)5);
   }
   
-  private static boolean checkPassword(A1Password.Client FEserver, String password, String hash) throws TException
+  private static boolean checkPassword(String password, String hash) throws TException
   {
-	return FEserver.checkPassword(password, hash);
+	return m_passwordService.checkPassword(password, hash);
   }
     
-  private static PerfCounters getPerfCounters(A1Password.Client FEserver)
+  private static PerfCounters getPerfCounters() throws TException
   {
-	return FEserver.getPerfCounters();
+	return m_managementService.getPerfCounters();
   }
   
-  private static void printGroupMembers(A1Management.Client FEserver) throws TException
+  private static void printGroupMembers() throws TException
   {
-	List<String> ids = FEserver.getGroupMembers();
+	List<String> ids = m_managementService.getGroupMembers();
 	for(int i = 0; i < ids.size(); i++)
 	{
 		System.out.println(ids.get(i) + ", ");

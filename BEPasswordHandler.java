@@ -13,7 +13,7 @@ public class BEPasswordHandler implements A1Password.Iface {
   public BEPasswordHandler() {
 	BCrypt bcrypt = new BCrypt();
   }
-
+  
   public String hashPassword (String password, short logRounds) throws ServiceUnavailableException {
 	return bcrypt.hashpw(password, bcrypt.gensalt(logRounds));
   }

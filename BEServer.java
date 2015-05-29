@@ -21,10 +21,12 @@ public class BEServer {
 
   public static void main(String [] args) {
     try {
-      passwordHandler = new BEPasswordHandler();
+	  PerfCounters counter = new PerfCounters();
+	  
+      passwordHandler = new BEPasswordHandler(counter);
       passwordProcessor = new A1Password.Processor(passwordHandler);
 	  
-	  managementHandler = new BEManagementHandler();
+	  managementHandler = new BEManagementHandler(counter);
 	  managementProcessor = new A1Management.Processor(managementHandler);
 
       Runnable psw = new Runnable() {

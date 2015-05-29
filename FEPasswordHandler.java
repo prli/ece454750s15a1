@@ -15,55 +15,54 @@ import ece454750s15a1.*;
 
 public class FEPasswordHandler implements A1Password.Iface {
 
-  private PerfCounters counter;
-  private BCrypt bcrypt;
-  
-  public FEPasswordHandler(PerfCounters counter) {
-	this.counter = counter;
-  }
-  
-  public String hashPassword (String password, short logRounds) throws ServiceUnavailableException {
-    //determine addr and port with load balancing
-	String addr = "localhost";
-	int port = 34950;
-	
-	TTransport m_passwordTransport = new TSocket(addr, port);
-	try{
-		m_passwordTransport.open();
+    private PerfCounters counter;
+    private BCrypt bcrypt;
 
-		TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
-		A1Password.Client BEServer = new A1Password.Client(protocol);
-		return BEServer.hashPassword(password, logRounds);
-	}catch(TException x)
-	{
-		x.printStackTrace();
-	}finally
-	{
-		m_passwordTransport.close();
-	}
-	return null;
-  }
+    public FEPasswordHandler(PerfCounters counter) {
+        this.counter = counter;
+    }
 
-  public boolean checkPassword (String password, String hash) {
-    //determine addr and port with load balancing
-	String addr = "localhost";
-	int port = 34950;
-	
-	TTransport m_passwordTransport = new TSocket(addr, port);
-	try{
-		m_passwordTransport.open();
+    public String hashPassword (String password, short logRounds) throws ServiceUnavailableException {
+        //determine addr and port with load balancing
+        String addr = "localhost";
+        int port = 34950;
 
-		TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
-		A1Password.Client BEServer = new A1Password.Client(protocol);
-		return BEServer.checkPassword(password, hash);
-	}catch(TException x)
-	{
-		x.printStackTrace();
-	}finally
-	{
-		m_passwordTransport.close();
-	}
-	return false;
-  }
+        TTransport m_passwordTransport = new TSocket(addr, port);
+        try{
+            m_passwordTransport.open();
+
+            TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
+            A1Password.Client BEServer = new A1Password.Client(protocol);
+            return BEServer.hashPassword(password, logRounds);
+        }catch(TException x)
+        {
+            x.printStackTrace();
+        }finally
+        {
+            m_passwordTransport.close();
+        }
+        return null;
+    }
+
+    public boolean checkPassword (String password, String hash) {
+        //determine addr and port with load balancing
+        String addr = "localhost";
+        int port = 34950;
+
+        TTransport m_passwordTransport = new TSocket(addr, port);
+        try{
+            m_passwordTransport.open();
+
+            TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
+            A1Password.Client BEServer = new A1Password.Client(protocol);
+            return BEServer.checkPassword(password, hash);
+        }catch(TException x)
+        {
+            x.printStackTrace();
+        }finally
+        {
+            m_passwordTransport.close();
+        }
+        return false;
+    }
 }
-

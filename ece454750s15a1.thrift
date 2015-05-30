@@ -9,6 +9,13 @@ struct PerfCounters {
   3: i32 numRequestsCompleted
 }
 
+struct ServerNode {
+  1: string host,
+  2: i32 pport,
+  3: i32 mport,
+  4: i32 ncores
+}
+
 exception ServiceUnavailableException {
   1:string msg
 }
@@ -20,6 +27,9 @@ service A1Password {
 
 service A1Management {
    PerfCounters getPerfCounters(),
-   list<string> getGroupMembers()
+   list<string> getGroupMembers(),
+   void addServerNode(1:string addr, 2:i32 pport, 3:i32 mport, 4:i32 ncores),
+   list<ServerNode> getAllBEServerNodes()
+   list<ServerNode> getAllFEServerNodes()
 }
 

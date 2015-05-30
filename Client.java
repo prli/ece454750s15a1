@@ -22,8 +22,8 @@ public class Client {
 
     public static void main(String [] args) {
         try {
-            m_passwordService = connectPasswordService("localhost", 14950);
-            m_managementService = connectManagementService("localhost", 24950);
+            m_passwordService = connectPasswordService("localhost", 14951);
+            m_managementService = connectManagementService("localhost", 24951);
 
             perform();
 
@@ -57,7 +57,7 @@ public class Client {
         try {
             System.out.println(hashPassword("password123"));
             System.out.println(getPerfCounters());
-
+			printAllBEServers();
         } catch (TException x) {
             x.printStackTrace();
         }
@@ -84,6 +84,15 @@ public class Client {
         for(int i = 0; i < ids.size(); i++)
         {
             System.out.println(ids.get(i) + ", ");
+        }
+    }
+	
+	private static void printAllBEServers() throws TException
+    {
+        List<ServerNode> servers = m_managementService.getAllBEServerNodes();
+        for(int i = 0; i < servers.size(); i++)
+        {
+            System.out.println(servers.get(i) + "\n");
         }
     }
     

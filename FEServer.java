@@ -21,7 +21,7 @@ public class FEServer {
 
     public static void main(String [] args) {
 
-        HashMap params = new HashMap();
+/*         HashMap params = new HashMap();
         HashMap seeds = new HashMap();
 
         for(int i = 0 ; i < args.length ; i+=2) {
@@ -34,32 +34,33 @@ public class FEServer {
             String[] seed = seedStrings[i].split(":");
             seeds.put(seed[0], seed[1]);
         }
-        params.remove("-seeds");
+        params.remove("-seeds"); */
 
         try {
             PerfCounters counter = new PerfCounters();
-
-            passwordHandler = new FEPasswordHandler(counter);
+			ArrayList<ServerNode> BEServers = new ArrayList<ServerNode>();
+			
+            passwordHandler = new FEPasswordHandler(counter, BEServers);
             passwordProcessor = new A1Password.Processor(passwordHandler);
 
-            managementHandler = new FEManagementHandler(counter);
+            managementHandler = new FEManagementHandler(counter, BEServers);
             managementProcessor = new A1Management.Processor(managementHandler);
-
+			
             Runnable passwordThread = new Runnable() {
                 public void run() {
-                    simple(passwordProcessor, 14950);
+                    simple(passwordProcessor, 14951);
                 }
             };
 
             Runnable ManagementThread = new Runnable() {
                 public void run() {
-                    simple(managementProcessor, 24950);
+                    simple(managementProcessor, 24951);
                 }
             };
 
             new Thread(passwordThread).start();
             new Thread(ManagementThread).start();
-
+			
         } catch (Exception x) {
             x.printStackTrace();
         }

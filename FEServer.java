@@ -21,8 +21,17 @@ public class FEServer {
 
     public static void main(String [] args) {
 
-/*         HashMap params = new HashMap();
-        HashMap seeds = new HashMap();
+        HashMap params = new HashMap();
+
+        String [] argLiteral = {"-host", "ecelinux1",
+            "-pport", "8123",
+            "-mport", "9123",
+            "-ncores","2",
+            "-seeds","ecelinux1:10123,ecelinux2:10123,ecelinux3:10123"
+        };
+
+        args = argLiteral;
+
 
         for(int i = 0 ; i < args.length ; i+=2) {
             params.put(args[i], args[i+1]);
@@ -34,7 +43,7 @@ public class FEServer {
             String[] seed = seedStrings[i].split(":");
             seeds.put(seed[0], seed[1]);
         }
-        params.remove("-seeds"); */
+        params.remove("-seeds");
 
         try {
             PerfCounters counter = new PerfCounters();

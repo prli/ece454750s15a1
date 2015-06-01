@@ -26,6 +26,15 @@ public class BEServer {
     public static A1Management.Processor managementProcessor;
 
     public static void main(String [] args) {
+
+        String [] argLiteral = {"-host", "ecelinux1",
+            "-pport", "8123",
+            "-mport", "9123",
+            "-ncores","2",
+            "-seeds","ecelinux1:10123,ecelinux2:10123,ecelinux3:10123"
+        };
+
+        args = argLiteral;
         
 /*         HashMap params = new HashMap();
         HashMap seeds = new HashMap();
@@ -41,6 +50,11 @@ public class BEServer {
             seeds.put(seed[0], seed[1]);
         }
         params.remove("-seeds"); */
+
+        System.out.println("params"+params);
+        System.out.println("seeds"+seeds);
+
+        System.err.println("------------------$$$$$$$------------");
 
         try {
             PerfCounters counter = new PerfCounters();

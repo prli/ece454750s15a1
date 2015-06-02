@@ -29,16 +29,16 @@ public class BEServer {
 
     public static void main(String [] args) {
 
-        String [] argLiteral = {"-host", "ecelinux1",
-            "-pport", "8123",
-            "-mport", "9123",
+        String [] argLiteral = {"-host", "localhost",
+            "-pport", "34950",
+            "-mport", "44950",
             "-ncores","2",
-            "-seeds","ecelinux1:10123,ecelinux2:10123,ecelinux3:10123"
+            "-seeds","localhost:24950"
         };
 
         args = argLiteral;
         
-        HashMap params = new HashMap();
+        HashMap<String, String> params = new HashMap<String, String>();
         HashMap seeds = new HashMap();
 
         for(int i = 0 ; i < args.length ; i+=2) {
@@ -57,7 +57,7 @@ public class BEServer {
         System.out.println("seeds"+seeds);
 
         System.err.println("------------------$$$$$$$------------");
-
+		
         try {
             PerfCounters counter = new PerfCounters();
 
@@ -67,18 +67,18 @@ public class BEServer {
             managementHandler = new BEManagementHandler(counter);
             managementProcessor = new A1Management.Processor(managementHandler);
 			
-			String addr = "";
-			//int pport = 34950;
+			
+			int pport = Integer.parseInt(params.get("-pport"));
             Runnable psw = new Runnable() {
                 public void run() {
-                    simple(passwordProcessor, 34950);
+                    simple(passwordProcessor, pport);
                 }
             };
 			
-			//int mport = 44950;
+			int mport = Integer.parseInt(params.get("-mport"));
             Runnable manage = new Runnable() {
                 public void run() {
-                    simple(managementProcessor, 44950);
+                    simple(managementProcessor, mport);
                 }
             };
 
@@ -86,7 +86,8 @@ public class BEServer {
             new Thread(manage).start();
 			
 			int ncores = 2;
-			joinCluster(addr, 34950, 44950, ncores);
+			String addr = params.get("-host");
+			joinCluster(addr, 34950, 44950, ncores, "localhost", 24950);
 			
         } catch (Exception x) {
             x.printStackTrace();
@@ -119,9 +120,10 @@ public class BEServer {
         }
     }
 	
-	public static void joinCluster(String addr, int pport, int mport, int ncores) throws TException
+	public static void joinCluster(String addr, int pport, int mport, int ncores, String seedHost, int seedPort) throws TException
 	{
-		TTransport transport = new TSocket(addr, mport);
+		TTransport transport = new TSocket(seedHost, seedPort);
+		System.out.println(addr);
         transport.open();
 
         TProtocol protocol = new  TBinaryProtocol(transport);

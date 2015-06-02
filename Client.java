@@ -22,8 +22,8 @@ public class Client {
 
     public static void main(String [] args) {
         try {
-            m_passwordService = connectPasswordService("localhost", 14951);
-            m_managementService = connectManagementService("localhost", 24951);
+            m_passwordService = connectPasswordService("localhost", 14950);
+            m_managementService = connectManagementService("localhost", 24950);
 
             perform();
 

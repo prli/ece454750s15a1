@@ -13,7 +13,8 @@ struct ServerNode {
   1: string host,
   2: i32 pport,
   3: i32 mport,
-  4: i32 ncores
+  4: i32 ncores,
+  5: optional i32 usedcores = 0
 }
 
 exception ServiceUnavailableException {

@@ -39,7 +39,10 @@ public class FEServer {
         try {
             PerfCounters counter = new PerfCounters();
 			ArrayList<ServerNode> BEServers = new ArrayList<ServerNode>();
-			
+			ServerNode s = new ServerNode("localhost", 14950, 24950, 2);
+			BEServers.add(s);
+			ServerNode s1 = new ServerNode("localhost", 14952, 24952, 1);
+			BEServers.add(s1);
             passwordHandler = new FEPasswordHandler(counter, BEServers);
             passwordProcessor = new A1Password.Processor(passwordHandler);
 
@@ -48,13 +51,13 @@ public class FEServer {
 			
             Runnable passwordThread = new Runnable() {
                 public void run() {
-                    simple(passwordProcessor, 14951);
+                    simple(passwordProcessor, 14950);
                 }
             };
 
             Runnable ManagementThread = new Runnable() {
                 public void run() {
-                    simple(managementProcessor, 24951);
+                    simple(managementProcessor, 24950);
                 }
             };
 

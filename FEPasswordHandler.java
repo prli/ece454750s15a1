@@ -19,7 +19,7 @@ public class FEPasswordHandler implements A1Password.Iface {
     private PerfCounters m_counter;
 	private ArrayList<ServerNode> m_BEServers;
     private BCrypt bcrypt;
-
+	
     public FEPasswordHandler(PerfCounters counter, ArrayList<ServerNode> BEServers) {
         this.m_counter = counter;
 		this.m_BEServers = BEServers;
@@ -27,7 +27,8 @@ public class FEPasswordHandler implements A1Password.Iface {
 
     public String hashPassword (String password, short logRounds) throws ServiceUnavailableException {
         //determine addr and port with load balancing
-        String addr = "localhost";
+        ServerNode bestBE = loadBalancing();
+		String addr = "localhost";
         int port = 34950;
 		
         TTransport m_passwordTransport = new TSocket(addr, port);
@@ -50,8 +51,9 @@ public class FEPasswordHandler implements A1Password.Iface {
 
     public boolean checkPassword (String password, String hash) {
         //determine addr and port with load balancing
-        String addr = "localhost";
-        int port = 34950;
+        ServerNode bestBE = loadBalancing();
+		String addr = bestBE.host;
+        int port = bestBE.pport;
 
         TTransport m_passwordTransport = new TSocket(addr, port);
         try{
@@ -67,4 +69,22 @@ public class FEPasswordHandler implements A1Password.Iface {
         }
         return false;
     }
+	
+	private ServerNode loadBalancing()
+	{
+		//arraylist search based on free cores
+		ServerNode bestBE = null;
+		for(ServerNode s : m_BEServers)
+		{
+			if(bestBE == null)
+			{
+				bestBE = s;
+			}
+			else if(s.ncores - s.usedcores > bestBE.ncores - bestBE.usedcores)
+			{
+				bestBE = s;
+			}
+		}
+		return bestBE;
+	}
 }

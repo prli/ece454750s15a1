@@ -1,6 +1,7 @@
 package ece454750s15a1;
 
 import java.util.*;
+import java.util.ArrayList;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TServer.Args;
 import org.apache.thrift.server.TSimpleServer;
@@ -23,29 +24,35 @@ public class FEServer {
 
     public static void main(String [] args) {
 
+        String [] argLiteral = {"-host", "ecelinux1",
+            "-pport", "8123",
+            "-mport", "9123",
+            "-ncores","2",
+            "-seeds","ecelinux1:10123,ecelinux2:10123,ecelinux3:10123"
+        };
+        
+        args = argLiteral;
+        
         HashMap params = new HashMap();
-
-//        String [] argLiteral = {"-host", "ecelinux1",
-//            "-pport", "8123",
-//            "-mport", "9123",
-//            "-ncores","2",
-//            "-seeds","ecelinux1:10123,ecelinux2:10123,ecelinux3:10123"
-//        };
-//
-//        args = argLiteral;
-//
-//
-//        for(int i = 0 ; i < args.length ; i+=2) {
-//            params.put(args[i], args[i+1]);
-//        }
-//        String seedString = (String)params.get("-seeds");
-//        String[] seedStrings = seedString.split(",");
-//
-//        for(int i = 0 ; i < seedStrings.length ; i++) {
-//            String[] seed = seedStrings[i].split(":");
-//            seeds.put(seed[0], seed[1]);
-//        }
-//        params.remove("-seeds");
+        ArrayList<String>  seedHosts = new ArrayList<String>();
+        ArrayList<Integer> seedPorts = new ArrayList<Integer>();
+        
+        for(int i = 0 ; i < args.length ; i+=2) {
+            params.put(args[i], args[i+1]);
+        }
+        String seedString = (String)params.get("-seeds");
+        String[] seedStrings = seedString.split(",");
+        
+        for(int i = 0 ; i < seedStrings.length ; i++) {
+            String[] seed = seedStrings[i].split(":");
+            seedHosts.add(seed[0]);
+            seedPorts.add(Integer.parseInt(seed[1]));
+        }
+        params.remove("-seeds");
+        
+        System.out.println("params : "+params);
+        System.out.println("seedHosts : "+seedHosts);
+        System.out.println("seedPorts : "+seedPorts);
 
         try {
             PerfCounters counter = new PerfCounters();
@@ -104,5 +111,11 @@ public class FEServer {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    // If the host/port matches existing list of
+    private boolean isSeedNode(HashMap params, ArrayList<String> seedHosts, ArrayList<Integer> seedPorts) {
+        return false;
+        
     }
 }

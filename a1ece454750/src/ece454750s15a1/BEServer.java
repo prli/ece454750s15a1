@@ -35,28 +35,29 @@ public class BEServer {
             "-ncores","2",
             "-seeds","ecelinux1:10123,ecelinux2:10123,ecelinux3:10123"
         };
-
+        
         args = argLiteral;
         
         HashMap params = new HashMap();
-        HashMap seeds = new HashMap();
-
+        ArrayList<String>  seedHosts = new ArrayList<String>();
+        ArrayList<Integer> seedPorts = new ArrayList<Integer>();
+        
         for(int i = 0 ; i < args.length ; i+=2) {
             params.put(args[i], args[i+1]);
         }
         String seedString = (String)params.get("-seeds");
         String[] seedStrings = seedString.split(",");
-
+        
         for(int i = 0 ; i < seedStrings.length ; i++) {
             String[] seed = seedStrings[i].split(":");
-            seeds.put(seed[0], seed[1]);
+            seedHosts.add(seed[0]);
+            seedPorts.add(Integer.parseInt(seed[1]));
         }
         params.remove("-seeds");
-
-        System.out.println("params"+params);
-        System.out.println("seeds"+seeds);
-
-        System.err.println("------------------$$$$$$$------------");
+        
+        System.out.println("params : "+params);
+        System.out.println("seedHosts : "+seedHosts);
+        System.out.println("seedPorts : "+seedPorts);
 
         try {
             PerfCounters counter = new PerfCounters();

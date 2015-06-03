@@ -53,6 +53,12 @@ public class FEServer {
         System.out.println("params : "+params);
         System.out.println("seedHosts : "+seedHosts);
         System.out.println("seedPorts : "+seedPorts);
+        System.out.println("is a seed : "+FEServer.isSeedNode(params,seedHosts,seedPorts));
+        
+        // Output Example
+        // params : {-ncores=2, -mport=9123, -host=ecelinux1, -pport=8123}
+        // seedHosts : [ecelinux1, ecelinux2, ecelinux3]
+        // seedPorts : [10123, 10123, 10123]
 
         try {
             PerfCounters counter = new PerfCounters();
@@ -113,9 +119,17 @@ public class FEServer {
         }
     }
     
-    // If the host/port matches existing list of
-    private boolean isSeedNode(HashMap params, ArrayList<String> seedHosts, ArrayList<Integer> seedPorts) {
-        return false;
+    // If the host/port matches list of seedHosts and seedPorts at the same index
+    public static boolean isSeedNode(HashMap params, ArrayList<String> seedHosts, ArrayList<Integer> seedPorts) {
         
+        String host = (String)params.get("-host");
+        Integer port = Integer.parseInt((String)params.get("-mport"));
+        
+        for(int i = 0; i<seedPorts.size();i++) {
+            if(host.equals(seedHosts.get(i)) && port.equals(seedPorts.get(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 }

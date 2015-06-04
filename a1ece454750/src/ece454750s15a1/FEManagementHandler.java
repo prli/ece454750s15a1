@@ -12,9 +12,10 @@ public class FEManagementHandler implements A1Management.Iface {
 	private ArrayList<ServerNode> BEServers;
 	private ArrayList<ServerNode> FEServers;
 	
-    public FEManagementHandler(PerfCounters counter, ArrayList<ServerNode> BEServers) {
+    public FEManagementHandler(PerfCounters counter, ArrayList<ServerNode> BEServers, ArrayList<ServerNode> FEServers) {
         this.counter = counter;
 		this.BEServers = BEServers;
+		this.FEServers = FEServers;
     }
 
     public PerfCounters getPerfCounters() {
@@ -25,10 +26,18 @@ public class FEManagementHandler implements A1Management.Iface {
         return null;
     }
 	
-	public void addServerNode(String host, int pport, int mport, int ncores)
+	public void addServerNode(String host, int pport, int mport, int ncores, boolean isBE)
 	{
 		ServerNode be = new ServerNode(host, pport, mport, ncores);
-		BEServers.add(be);
+		if(isBE)
+		{
+			BEServers.add(be);
+		}
+		else
+		{
+			FEServers.add(be);
+		}
+		
 	}
 	
 	public List<ServerNode> getAllFEServerNodes()

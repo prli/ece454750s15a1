@@ -59,6 +59,7 @@ public class Client {
         try {
             System.out.println(hashPassword("password123"));
             System.out.println(getPerfCounters());
+			printAllFEServers();
 			printAllBEServers();
         } catch (TException x) {
             x.printStackTrace();
@@ -92,6 +93,17 @@ public class Client {
 	private static void printAllBEServers() throws TException
     {
         List<ServerNode> servers = m_managementService.getAllBEServerNodes();
+		System.out.println("BE===============\n");
+        for(int i = 0; i < servers.size(); i++)
+        {
+            System.out.println(servers.get(i) + "\n");
+        }
+    }
+	
+	private static void printAllFEServers() throws TException
+    {
+        List<ServerNode> servers = m_managementService.getAllFEServerNodes();
+		System.out.println("FE===============\n");
         for(int i = 0; i < servers.size(); i++)
         {
             System.out.println(servers.get(i) + "\n");

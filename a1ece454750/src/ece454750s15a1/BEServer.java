@@ -109,32 +109,31 @@ public class BEServer {
         }
         params.remove("-seeds");
 
-        
         System.out.println("params : "+params);
         System.out.println("seedHosts : "+seedHosts);
         System.out.println("seedPorts : "+seedPorts);
 
         try {
             PerfCounters counter = new PerfCounters();
-
+			
+			String addr = params.get("-host");
+			int pport = Integer.parseInt(params.get("-pport"));
+			int mport = Integer.parseInt(params.get("-mport"));
+			int ncores = Integer.parseInt(params.get("-ncores"));
+			
             passwordHandler = new BEPasswordHandler(counter);
             passwordProcessor = new A1Password.Processor(passwordHandler);
 
             managementHandler = new BEManagementHandler(counter);
             managementProcessor = new A1Management.Processor(managementHandler);
 			
-			
-			int pport = Integer.parseInt(params.get("-pport"));
             passwordThread = new BEPasswordThread(passwordProcessor, pport);
 			
-			int mport = Integer.parseInt(params.get("-mport"));
             managementThread = new BEManagementThread(managementProcessor, mport);
 
             new Thread(passwordThread).start();
             new Thread(managementThread).start();
-			
-			int ncores = Integer.parseInt(params.get("-ncores"));;
-			String addr = params.get("-host");
+
 			joinCluster(addr, pport, mport, ncores, seedHosts.get(0), seedPorts.get(0));
 			
         } catch (Exception x) {
@@ -151,7 +150,7 @@ public class BEServer {
         TProtocol protocol = new  TBinaryProtocol(transport);
         A1Management.Client client = new A1Management.Client(protocol);
 		
-		client.addServerNode(addr, pport, mport, ncores);
+		client.addServerNode(addr, pport, mport, ncores, true);
 		transport.close();
 	}
 }

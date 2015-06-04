@@ -29,7 +29,7 @@ service A1Password {
 service A1Management {
    PerfCounters getPerfCounters(),
    list<string> getGroupMembers(),
-   void addServerNode(1:string addr, 2:i32 pport, 3:i32 mport, 4:i32 ncores),
+   void addServerNode(1:string addr, 2:i32 pport, 3:i32 mport, 4:i32 ncores, 5:bool isBE),
    list<ServerNode> getAllBEServerNodes()
    list<ServerNode> getAllFEServerNodes()
 }

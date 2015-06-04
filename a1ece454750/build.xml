@@ -1,97 +1,165 @@
 <project name="ece454750s15a1" default="start" basedir=".">
-
-  <description>assignment1</description>
-
-  <property name="src" location="src" />
-  <property name="gen" location="gen-java" />
-  <property name="build" location="build" />
-
-  <path id="libs.classpath">
-    <fileset dir="../../lib/java/build">
-      <include name="*.jar" />
-      <exclude name="-test.jar" />
-    </fileset>
-    <fileset dir="../../lib/java/build/lib">
-      <include name="*.jar" />
-    </fileset>
-    <fileset dir="./jBCrypt-0.4">
-      <include name="*.jar" />
-    </fileset>
-  </path>
-  <path id="build.classpath">
-    <path refid="libs.classpath" />
-    <pathelement path="${gen}" />
-  </path>
-  <path id="ece454750s15a1.classpath">
-    <path refid="build.classpath" />
-    <pathelement path="${build}" />
-    <pathelement path="ece454750s15a1.jar" />
-  </path>
-  <target name="init">
-    <tstamp />
-    <mkdir dir="${build}"/>
-    <mkdir dir="${build}/log"/>
-  </target>
-
-  <target name="compile" depends="init, generate">
-    <javac source="1.6" target="1.6" srcdir="${gen}" destdir="${build}" classpathref="libs.classpath" />
-    <javac source="1.6" target="1.6" srcdir="${src}" destdir="${build}" classpathref="build.classpath" />
-  </target>
-
-  <target name="test" depends="start" />
-
-  <target name="start" description="Start assignment1" depends="compile" >
-    <jar jarfile="ece454750s15a1.jar" basedir="${build}"/>
-    <parallel>
-      <java classname="FEServer" fork="true" timeout="10000"
-        classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
-      </java>
-      <java classname="BEServer" fork="true" timeout="10000"
-        classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
-      </java>
-      <sequential>
-        <sleep seconds="2"/>
+    
+    <description>assignment1</description>
+    
+    <property name="src" location="src" />
+    <property name="gen" location="gen-java" />
+    <property name="build" location="build" />
+    
+    <path id="libs.classpath">
+        <fileset dir="../../lib/java/build">
+            <include name="*.jar" />
+            <exclude name="-test.jar" />
+        </fileset>
+        <fileset dir="../../lib/java/build/lib">
+            <include name="*.jar" />
+        </fileset>
+        <fileset dir="./jBCrypt-0.4">
+            <include name="*.jar" />
+        </fileset>
+    </path>
+    <path id="build.classpath">
+        <path refid="libs.classpath" />
+        <pathelement path="${gen}" />
+    </path>
+    <path id="ece454750s15a1.classpath">
+        <path refid="build.classpath" />
+        <pathelement path="${build}" />
+        <pathelement path="ece454750s15a1.jar" />
+    </path>
+    <target name="init">
+        <tstamp />
+        <mkdir dir="${build}"/>
+        <mkdir dir="${build}/log"/>
+    </target>
+    
+    <target name="compile" depends="init, generate">
+        <javac source="1.6" target="1.6" srcdir="${gen}" destdir="${build}" classpathref="libs.classpath" />
+        <javac source="1.6" target="1.6" srcdir="${src}" destdir="${build}" classpathref="build.classpath" />
+    </target>
+    
+    <target name="test" depends="start" />
+    
+    <target name="start" description="Start assignment1" depends="compile" >
+        <jar jarfile="ece454750s15a1.jar" basedir="${build}"/>
+        <parallel>
+            <java classname="FEServer" fork="true" timeout="10000"
+                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+            </java>
+            <java classname="BEServer" fork="true" timeout="10000"
+                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+            </java>
+            <sequential>
+                <sleep seconds="2"/>
+                <echo>ece454750s15a1 client simple:</echo>
+                <java classname="Client"
+                    classpathref="ece454750s15a1.classpath" failonerror="true">
+                    <arg line="simple"/>
+                </java>
+            </sequential>
+        </parallel>
+    </target>
+    
+    <!--Create a cluster of FEs and BEs-->
+    <target name="startCluster" description="Start assignment1" depends="compile" >
+        <jar jarfile="ece454750s15a1.jar" basedir="${build}"/>
+        <parallel>
+            
+            <!--FE Seed 1-->
+            <java classname="FEServer" fork="true" timeout="10000"
+                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+            	<arg line="-host ecelinux11 –pport 9018 –mport 1497 –ncores 2 -seeds ecelinux11:1497,ecelinux12:3453"/>
+            </java>
+            
+            <!--FE Seed 2-->
+            <java classname="FEServer" fork="true" timeout="10000"
+                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+            	<arg line="-host ecelinux12 –pport 2736 –mport 3453 –ncores 2 -seeds ecelinux11:1497,ecelinux12:3453"/>
+            </java>
+            
+            
+        	<!--Regular FE 1-->
+            <java classname="FEServer" fork="true" timeout="10000"
+                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+            	<arg line="-host ecelinux7 –pport 5764 –mport 6845 –ncores 2 -seeds ecelinux11:1497,ecelinux12:3453"/>
+            </java>
+            
+            <!--Regular FE 2-->
+            <java classname="FEServer" fork="true" timeout="10000"
+                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+            	<arg line="-host ecelinux8 –pport 2124 –mport 7678 –ncores 2 -seeds ecelinux11:1497,ecelinux12:3453"/>
+            </java>
+            
+            <!--Regular FE 3-->
+            <java classname="FEServer" fork="true" timeout="10000"
+                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+            	<arg line="-host ecelinux9 –pport 6255 –mport 8654 –ncores 2 -seeds ecelinux11:1497,ecelinux12:3453"/>
+            </java>
+            
+            
+            
+            <!--BE 1-->
+            <java classname="BEServer" fork="true" timeout="10000"
+                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+                <arg line="-host ecelinux3 –pport 7453 –mport 3976 –ncores 2 -seeds ecelinux11:1497,ecelinux12:3453"/>
+            </java>
+            <!--BE 2-->
+			<java classname="BEServer" fork="true" timeout="10000"
+                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+                <arg line="-host ecelinux5 –pport 1085 –mport 9345 –ncores 2 -seeds ecelinux11:1497,ecelinux12:3453"/>
+            </java>
+            <!--BE 3-->
+			<java classname="BEServer" fork="true" timeout="10000"
+                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+                <arg line="-host ecelinux6 –pport 2098 –mport 3245 –ncores 2 -seeds ecelinux11:1497,ecelinux12:3453"/>
+            </java>
+            
+            
+            
+            
+            
+            <sequential>
+                <sleep seconds="2"/>
+                <echo>ece454750s15a1 client simple:</echo>
+                <java classname="Client"
+                    classpathref="ece454750s15a1.classpath" failonerror="true">
+                    <arg line="simple"/>
+                </java>
+            </sequential>
+        </parallel>
+    </target>
+    
+    <target name="generate">
+        <!-- Generate the thrift gen-java source -->
+        <!-- exec executable="../../compiler/cpp/thrift" failonerror="true" -->
+        <exec executable="/usr/bin/thrift" failonerror="true" >
+            <arg line="--gen java -r ece454750s15a1.thrift"/>
+        </exec>
+    </target>
+    
+    <target name="client" description="start ece454750s15a1 client" depends="compile">
         <echo>ece454750s15a1 client simple:</echo>
         <java classname="Client"
-          classpathref="ece454750s15a1.classpath" failonerror="true">
-          <arg line="simple"/>
+            classpathref="ece454750s15a1.classpath" failonerror="true">
+            <arg line="simple"/>
         </java>
-      </sequential>
-    </parallel>
-  </target>
-
-  <target name="generate">
-    <!-- Generate the thrift gen-java source -->
-    <!-- exec executable="../../compiler/cpp/thrift" failonerror="true" -->
-    <exec executable="/usr/bin/thrift" failonerror="true" >
-      <arg line="--gen java -r ece454750s15a1.thrift"/>
-    </exec>
-  </target>
-
-  <target name="client" description="start ece454750s15a1 client" depends="compile">
-    <echo>ece454750s15a1 client simple:</echo>
-    <java classname="Client"
-      classpathref="ece454750s15a1.classpath" failonerror="true">
-      <arg line="simple"/>
-    </java>
-  </target>
-
-  <target name="FEserver" description="Run FE server" depends="compile">
-      <java classname="JavaServer" fork="true"
-        classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
-      </java>
-  </target>
-
-  <target name="BEserver" description="Run BE server" depends="compile">
-      <java classname="BEServer" fork="true"
-        classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
-      </java>
-  </target>
-
-  <target name="clean">
-    <delete dir="${build}" />
-    <delete dir="${gen}"/>
-    <delete file="ece454750s15a1.jar" />
-  </target>
-
+    </target>
+    
+    <target name="FEserver" description="Run FE server" depends="compile">
+        <java classname="JavaServer" fork="true"
+            classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+        </java>
+    </target>
+    
+    <target name="BEserver" description="Run BE server" depends="compile">
+        <java classname="BEServer" fork="true"
+            classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
+        </java>
+    </target>
+    
+    <target name="clean">
+        <delete dir="${build}" />
+        <delete dir="${gen}"/>
+        <delete file="ece454750s15a1.jar" />
+    </target>
 </project>

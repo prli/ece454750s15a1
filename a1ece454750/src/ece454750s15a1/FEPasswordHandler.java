@@ -30,8 +30,8 @@ public class FEPasswordHandler implements A1Password.Iface {
     public String hashPassword (String password, short logRounds) throws ServiceUnavailableException {
         //determine addr and port with load balancing
         ServerNode bestBE = loadBalancing();
-		String addr = "localhost";
-        int port = 34950;
+		String addr = bestBE.host;
+        int port = bestBE.pport;
 		
         TTransport m_passwordTransport = new TSocket(addr, port);
         try{

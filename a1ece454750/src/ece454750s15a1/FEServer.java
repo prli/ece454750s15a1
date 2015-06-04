@@ -15,28 +15,82 @@ import org.apache.thrift.transport.TSSLTransportFactory.TSSLTransportParameters;
 import ece454750s15a1.*;
 
 public class FEServer {
+	public static class FEPasswordThread implements Runnable {
+		private A1Password.Processor processor;
+		private int pport;
+		public FEPasswordThread(A1Password.Processor p, int port) {
+		   processor = p;
+		   pport = port;
+		}
 
-    public static FEPasswordHandler passwordHandler;
+		public void run() {
+			simple(processor, pport);
+		}
+	}
+	
+	public static void simple(A1Password.Processor processor, int port) {
+        try {
+            TServerTransport serverTransport = new TServerSocket(port);
+            TServer server = new TSimpleServer(
+                                               new Args(serverTransport).processor(processor));
+
+            System.out.println("Starting the FE password server...");
+            server.serve();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+	public static class FEManagementThread implements Runnable {
+		private A1Management.Processor processor;
+		private int mport;
+		public FEManagementThread(A1Management.Processor p, int port) {
+			processor = p;
+			mport = port;
+		}
+
+		public void run() {
+			simple(processor, mport);
+		}
+	}
+	
+    public static void simple(A1Management.Processor processor, int port) {
+        try {
+            TServerTransport serverTransport = new TServerSocket(port);
+            TServer server = new TSimpleServer(
+                                               new Args(serverTransport).processor(processor));
+            
+            System.out.println("Starting the FE management server...");
+            server.serve();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+	
+	public static FEPasswordHandler passwordHandler;
     public static FEManagementHandler managementHandler;
 
     public static A1Password.Processor passwordProcessor;
     public static A1Management.Processor managementProcessor;
+	
+	public static FEPasswordThread passwordThread;
+	public static FEManagementThread managementThread;
 
     public static void main(String [] args) {
-
-        String [] argLiteral = {"-host", "ecelinux1",
-            "-pport", "8123",
-            "-mport", "9123",
+	
+		String [] argLiteral = {"-host", "localhost",
+            "-pport", "14950",
+            "-mport", "24950",
             "-ncores","2",
-            "-seeds","ecelinux1:10123,ecelinux2:10123,ecelinux3:10123"
+            "-seeds","localhost:24950"
         };
         
         args = argLiteral;
         
-        HashMap params = new HashMap();
+        HashMap<String, String> params = new HashMap<String, String>();
         ArrayList<String>  seedHosts = new ArrayList<String>();
         ArrayList<Integer> seedPorts = new ArrayList<Integer>();
-        
+
         for(int i = 0 ; i < args.length ; i+=2) {
             params.put(args[i], args[i+1]);
         }
@@ -63,59 +117,24 @@ public class FEServer {
         try {
             PerfCounters counter = new PerfCounters();
 			ArrayList<ServerNode> BEServers = new ArrayList<ServerNode>();
-			ServerNode s = new ServerNode("localhost", 14950, 24950, 2);
-			BEServers.add(s);
-			ServerNode s1 = new ServerNode("localhost", 14952, 24952, 1);
-			BEServers.add(s1);
+
             passwordHandler = new FEPasswordHandler(counter, BEServers);
             passwordProcessor = new A1Password.Processor(passwordHandler);
 
             managementHandler = new FEManagementHandler(counter, BEServers);
             managementProcessor = new A1Management.Processor(managementHandler);
 			
-            Runnable passwordThread = new Runnable() {
-                public void run() {
-                    simple(passwordProcessor, 14950);
-                }
-            };
+			int pport = Integer.parseInt(params.get("-pport"));
+            passwordThread = new FEPasswordThread(passwordProcessor, pport);
 
-            Runnable ManagementThread = new Runnable() {
-                public void run() {
-                    simple(managementProcessor, 24950);
-                }
-            };
+			int mport = Integer.parseInt(params.get("-mport"));
+            managementThread = new FEManagementThread(managementProcessor, mport);
 
             new Thread(passwordThread).start();
-            new Thread(ManagementThread).start();
+            new Thread(managementThread).start();
 			
         } catch (Exception x) {
             x.printStackTrace();
-        }
-    }
-
-    public static void simple(A1Password.Processor processor, int port) {
-        try {
-            TServerTransport serverTransport = new TServerSocket(port);
-            TServer server = new TSimpleServer(
-                                               new Args(serverTransport).processor(processor));
-
-            System.out.println("Starting the FE password server...");
-            server.serve();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void simple(A1Management.Processor processor, int port) {
-        try {
-            TServerTransport serverTransport = new TServerSocket(port);
-            TServer server = new TSimpleServer(
-                                               new Args(serverTransport).processor(processor));
-            
-            System.out.println("Starting the FE management server...");
-            server.serve();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
     
@@ -133,3 +152,4 @@ public class FEServer {
         return false;
     }
 }
+

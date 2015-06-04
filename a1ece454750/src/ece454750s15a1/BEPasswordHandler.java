@@ -9,22 +9,25 @@ import ece454750s15a1.*;
 
 public class BEPasswordHandler implements A1Password.Iface {
 
-    private PerfCounters counter;
+    private BEManagementHandler m_BEManagementHandler;
     private BCrypt bcrypt;
 
-    public BEPasswordHandler(PerfCounters counter) {
+    public BEPasswordHandler(BEManagementHandler managementHandler) {
         BCrypt bcrypt = new BCrypt();
-        this.counter = counter;
+        this.m_BEManagementHandler = managementHandler;
     }
 
     public String hashPassword (String password, short logRounds) throws ServiceUnavailableException {
-        counter.numRequestsReceived++;
+        m_BEManagementHandler.numRequestsReceived++;
         String hash = bcrypt.hashpw(password, bcrypt.gensalt(logRounds));
-        counter.numRequestsCompleted++;
+        m_BEManagementHandler.numRequestsCompleted++;
         return hash;
     }
 
     public boolean checkPassword (String password, String hash) {
-        return bcrypt.checkpw(password, hash);
+		m_BEManagementHandler.numRequestsReceived++;
+        boolean checked = bcrypt.checkpw(password, hash);
+		m_BEManagementHandler.numRequestsCompleted++;
+		return checked;
     }
 }

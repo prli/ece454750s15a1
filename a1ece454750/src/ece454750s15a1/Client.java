@@ -57,7 +57,7 @@ public class Client {
     private static void perform() throws TException
     {
         try {
-            System.out.println(hashPassword("password123"));
+            System.out.println("hash 1 = " + hashPassword("password123", 20));
             System.out.println(getPerfCounters());
 			printAllFEServers();
 			printAllBEServers();
@@ -66,9 +66,10 @@ public class Client {
         }
     }
 
-    private static String hashPassword(String password) throws TException
+    private static String hashPassword(String password, int logRounds) throws TException
     {
-        return m_passwordService.hashPassword(password, (short)5);
+		System.out.println("hashing with log round of " + logRounds + "...");
+        return m_passwordService.hashPassword(password, (short)logRounds);
     }
 
     private static boolean checkPassword(String password, String hash) throws TException

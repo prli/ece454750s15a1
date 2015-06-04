@@ -10,35 +10,42 @@ import ece454750s15a1.*;
 public class BEManagementHandler implements A1Management.Iface {
 
     private List<String> groupMembers = Arrays.asList("prli", "p8zhao");
-    private PerfCounters counter;
-    private ArrayList<ServerNode> BEServers;
-    private ArrayList<ServerNode> FEServers;
-
-    public BEManagementHandler(PerfCounters counter) {
-        this.counter = counter;
+	private long m_startTime;
+	
+	public int numRequestsReceived;
+	public int numRequestsCompleted;
+	
+    public BEManagementHandler() {
+        m_startTime = System.currentTimeMillis();
     }
 
     public PerfCounters getPerfCounters() {
-        return counter;
+        long curTime = System.currentTimeMillis();
+		PerfCounters perfCounter = new PerfCounters((int)(curTime - m_startTime)/1000, numRequestsReceived, numRequestsCompleted);
+        return perfCounter;
     }
 
     public List<String> getGroupMembers() {
         return groupMembers;
     }
     
-    public void addServerNode(String host, int pport, int mport, int ncores)
+    public void addServerNode(ServerNode node, boolean isBE)
     {
-        ServerNode be = new ServerNode(host, pport, mport, ncores);
-        BEServers.add(be);
+		return;
+    }
+	
+	public void removeServerNode(ServerNode node, boolean isBE)
+    {
+        return;
     }
     
     public List<ServerNode> getAllFEServerNodes()
     {
-        return FEServers;
+        return null;
     }
     
     public List<ServerNode> getAllBEServerNodes()
     {
-        return BEServers;
+        return null;
     }
 }

@@ -120,26 +120,18 @@ public class FEServer {
         // seedHosts : [ecelinux1, ecelinux2, ecelinux3]
         // seedPorts : [10123, 10123, 10123]
 
-        try {
-            PerfCounters counter = new PerfCounters();
-			ArrayList<ServerNode> BEServers = new ArrayList<ServerNode>();
-			ArrayList<ServerNode> FEServers = new ArrayList<ServerNode>();
-			
+        try {					
 			String addr = params.get("-host");
 			int pport = Integer.parseInt(params.get("-pport"));
 			int mport = Integer.parseInt(params.get("-mport"));
 			int ncores = Integer.parseInt(params.get("-ncores"));
 			
-			if(isSeedNode(params, seedHosts, seedPorts))
-			{
-				FEServers.add(new ServerNode(addr, pport, mport, ncores));
-			}
-            passwordHandler = new FEPasswordHandler(counter, BEServers);
-            passwordProcessor = new A1Password.Processor(passwordHandler);
-
-            managementHandler = new FEManagementHandler(counter, BEServers, FEServers);
+			managementHandler = new FEManagementHandler();
             managementProcessor = new A1Management.Processor(managementHandler);
 			
+            passwordHandler = new FEPasswordHandler(managementHandler);
+            passwordProcessor = new A1Password.Processor(passwordHandler);
+
             passwordThread = new FEPasswordThread(passwordProcessor, pport);
 
 			
@@ -152,6 +144,9 @@ public class FEServer {
 			if(!isSeedNode(params, seedHosts, seedPorts))
 			{
 				joinCluster(addr, pport, mport, ncores, seedHosts.get(0), seedPorts.get(0));
+			}else
+			{
+				managementHandler.FEServers.add(new ServerNode(addr, pport, mport, ncores));
 			}
 			
         } catch (Exception x) {
@@ -182,8 +177,8 @@ public class FEServer {
 
         TProtocol protocol = new  TBinaryProtocol(transport);
         A1Management.Client client = new A1Management.Client(protocol);
-		
-		client.addServerNode(addr, pport, mport, ncores, false);
+		ServerNode node = new ServerNode(addr, pport, mport, ncores);
+		client.addServerNode(node, false);
 		transport.close();
 	}
 }

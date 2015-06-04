@@ -8,36 +8,51 @@ import ece454750s15a1.*;
 
 public class FEManagementHandler implements A1Management.Iface {
 
-    private PerfCounters counter;
-	private ArrayList<ServerNode> BEServers;
-	private ArrayList<ServerNode> FEServers;
+	public ArrayList<ServerNode> BEServers;
+	public ArrayList<ServerNode> FEServers;
 	
-    public FEManagementHandler(PerfCounters counter, ArrayList<ServerNode> BEServers, ArrayList<ServerNode> FEServers) {
-        this.counter = counter;
-		this.BEServers = BEServers;
-		this.FEServers = FEServers;
+	private long m_startTime;
+	public int numRequestsReceived;
+	public int numRequestsCompleted;
+	
+    public FEManagementHandler() {
+		m_startTime = System.currentTimeMillis();
+		this.BEServers = new ArrayList<ServerNode>();
+		this.FEServers = new ArrayList<ServerNode>();
     }
 
     public PerfCounters getPerfCounters() {
-        return counter;
+		long curTime = System.currentTimeMillis();
+		PerfCounters perfCounter = new PerfCounters((int)(curTime - m_startTime)/1000, numRequestsReceived, numRequestsCompleted);
+        return perfCounter;
     }
 
     public List<String> getGroupMembers() {
         return null;
     }
 	
-	public void addServerNode(String host, int pport, int mport, int ncores, boolean isBE)
+	public void addServerNode(ServerNode node, boolean isBE)
 	{
-		ServerNode be = new ServerNode(host, pport, mport, ncores);
 		if(isBE)
 		{
-			BEServers.add(be);
+			BEServers.add(node);
 		}
 		else
 		{
-			FEServers.add(be);
+			FEServers.add(node);
 		}
-		
+	}
+	
+	public void removeServerNode(ServerNode node, boolean isBE)
+	{
+		if(isBE)
+		{
+			BEServers.remove(node);
+		}
+		else
+		{
+			FEServers.remove(node);
+		}
 	}
 	
 	public List<ServerNode> getAllFEServerNodes()

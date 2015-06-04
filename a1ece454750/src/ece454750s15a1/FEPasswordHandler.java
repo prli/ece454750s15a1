@@ -9,7 +9,6 @@ import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 
 import org.apache.thrift.TException;
-import org.mindrot.jbcrypt.BCrypt;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -18,18 +17,19 @@ import ece454750s15a1.*;
 
 public class FEPasswordHandler implements A1Password.Iface {
 
-    private PerfCounters m_counter;
-	private ArrayList<ServerNode> m_BEServers;
-    private BCrypt bcrypt;
+    private FEManagementHandler m_FEManagementHandler;
 	
-    public FEPasswordHandler(PerfCounters counter, ArrayList<ServerNode> BEServers) {
-        this.m_counter = counter;
-		this.m_BEServers = BEServers;
+    public FEPasswordHandler(FEManagementHandler managementHandler) {
+        this.m_FEManagementHandler = managementHandler;
     }
 
     public String hashPassword (String password, short logRounds) throws ServiceUnavailableException {
         //determine addr and port with load balancing
         ServerNode bestBE = loadBalancing();
+		if(bestBE == null)
+		{
+			throw new ServiceUnavailableException("no service");
+		}
 		String addr = bestBE.host;
         int port = bestBE.pport;
 		
@@ -39,16 +39,16 @@ public class FEPasswordHandler implements A1Password.Iface {
 
             TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
             A1Password.Client BEServer = new A1Password.Client(protocol);
-			m_counter.numRequestsReceived++;
+			m_FEManagementHandler.numRequestsReceived++;
             String hash = BEServer.hashPassword(password, logRounds);
-			m_counter.numRequestsCompleted++;
+			m_FEManagementHandler.numRequestsCompleted++;
 			return hash;
         }catch(TException x){
-            x.printStackTrace();
+			m_FEManagementHandler.BEServers.remove(bestBE);
+            return hashPassword(password, logRounds);
         }finally{
             m_passwordTransport.close();
         }
-        return null;
     }
 
     public boolean checkPassword (String password, String hash) {
@@ -63,20 +63,24 @@ public class FEPasswordHandler implements A1Password.Iface {
 
             TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
             A1Password.Client BEServer = new A1Password.Client(protocol);
-            return BEServer.checkPassword(password, hash);
+			m_FEManagementHandler.numRequestsReceived++;
+            boolean checked = BEServer.checkPassword(password, hash);
+			m_FEManagementHandler.numRequestsCompleted++;
+            return checked;
         }catch(TException x){
+            m_FEManagementHandler.BEServers.remove(bestBE);
             x.printStackTrace();
         }finally{
             m_passwordTransport.close();
         }
-        return false;
+		return false;
     }
 	
 	private ServerNode loadBalancing()
 	{
 		//arraylist search based on free cores
 		ServerNode bestBE = null;
-		for(ServerNode s : m_BEServers)
+		for(ServerNode s : m_FEManagementHandler.BEServers)
 		{
 			if(bestBE == null)
 			{

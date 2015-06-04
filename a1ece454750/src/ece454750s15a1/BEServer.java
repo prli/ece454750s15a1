@@ -114,19 +114,17 @@ public class BEServer {
         System.out.println("seedPorts : "+seedPorts);
 
         try {
-            PerfCounters counter = new PerfCounters();
-			
 			String addr = params.get("-host");
 			int pport = Integer.parseInt(params.get("-pport"));
 			int mport = Integer.parseInt(params.get("-mport"));
 			int ncores = Integer.parseInt(params.get("-ncores"));
 			
-            passwordHandler = new BEPasswordHandler(counter);
-            passwordProcessor = new A1Password.Processor(passwordHandler);
-
-            managementHandler = new BEManagementHandler(counter);
+			managementHandler = new BEManagementHandler();
             managementProcessor = new A1Management.Processor(managementHandler);
 			
+            passwordHandler = new BEPasswordHandler(managementHandler);
+            passwordProcessor = new A1Password.Processor(passwordHandler);
+
             passwordThread = new BEPasswordThread(passwordProcessor, pport);
 			
             managementThread = new BEManagementThread(managementProcessor, mport);
@@ -150,7 +148,8 @@ public class BEServer {
         TProtocol protocol = new  TBinaryProtocol(transport);
         A1Management.Client client = new A1Management.Client(protocol);
 		
-		client.addServerNode(addr, pport, mport, ncores, true);
+		ServerNode node = new ServerNode(addr, pport, mport, ncores);
+		client.addServerNode(node, true);
 		transport.close();
 	}
 }

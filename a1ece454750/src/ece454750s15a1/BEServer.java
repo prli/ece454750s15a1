@@ -119,6 +119,8 @@ public class BEServer {
 			int mport = Integer.parseInt(params.get("-mport"));
 			int ncores = Integer.parseInt(params.get("-ncores"));
 			
+			ServerNode node = new ServerNode(addr, pport, mport, ncores, true, false);
+			
 			managementHandler = new BEManagementHandler();
             managementProcessor = new A1Management.Processor(managementHandler);
 			
@@ -132,23 +134,44 @@ public class BEServer {
             new Thread(passwordThread).start();
             new Thread(managementThread).start();
 
-			joinCluster(addr, pport, mport, ncores, seedHosts.get(0), seedPorts.get(0));
+			joinCluster(node, seedHosts, seedPorts);
 			
         } catch (Exception x) {
             x.printStackTrace();
         }
     }
 	
-	public static void joinCluster(String addr, int pport, int mport, int ncores, String seedHost, int seedPort) throws TException
+	public static void joinCluster(ServerNode node, ArrayList<String> seedHosts, ArrayList<Integer> seedPorts) throws TException
 	{
-		TTransport transport = new TSocket(seedHost, seedPort);
-        transport.open();
+		int seedIndex = 0;
+		while(true){
+			TTransport transport = new TSocket(seedHosts.get(seedIndex), seedPorts.get(seedIndex));
+			try
+			{
+				transport.open();
 
-        TProtocol protocol = new  TBinaryProtocol(transport);
-        A1Management.Client client = new A1Management.Client(protocol);
-		
-		ServerNode node = new ServerNode(addr, pport, mport, ncores, true, false);
-		client.addServerNode(node);
-		transport.close();
+				TProtocol protocol = new  TBinaryProtocol(transport);
+				A1Management.Client client = new A1Management.Client(protocol);
+				
+				client.addServerNode(node);
+				return;
+			}
+			catch(TException e)
+			{
+				seedIndex = (seedIndex + 1)%seedHosts.size();
+			}
+			finally
+			{
+				transport.close();
+				try
+				{
+					Thread.sleep(100); //try again after 100ms
+				}
+				catch(InterruptedException e)
+				{
+				
+				}
+			}
+		}
 	}
 }

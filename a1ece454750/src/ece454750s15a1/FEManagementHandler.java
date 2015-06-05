@@ -48,12 +48,19 @@ public class FEManagementHandler implements A1Management.Iface {
 		System.out.println("adding...");
 		if(node.isBE)
 		{
-			BEServers.add(node);
+			if(!BEServers.contains(node))
+			{
+				BEServers.add(node);
+			}
 		}
 		else
 		{
-			FEServers.add(node);
+			if(!FEServers.contains(node))
+			{
+				FEServers.add(node);
+			}
 		}
+		gossipServerList();
 	}
 	
 	public void removeServerNode(ServerNode node)
@@ -67,23 +74,35 @@ public class FEManagementHandler implements A1Management.Iface {
 		{
 			FEServers.remove(node);
 		}
+		gossipServerList();
 	}
 	
 	public void setServerList(List<ServerNode> list, boolean isBE)
 	{
-		if (isBE)
+		CopyOnWriteArrayList<ServerNode> newList = new CopyOnWriteArrayList<ServerNode>(list);
+		for(ServerNode sn : newList)
 		{
-			BEServers = new CopyOnWriteArrayList<ServerNode>(list);
-		}
-		else
-		{
-			FEServers = new CopyOnWriteArrayList<ServerNode>(list);
+			if (isBE)
+			{
+				if(!BEServers.contains(sn))
+				{
+					BEServers.add(sn);
+				}	
+			}
+			else
+			{
+				if(!FEServers.contains(sn))
+				{
+					FEServers.add(sn);
+				}	
+			}
 		}
 		
 	}
 	
 	public void gossipServerList()
 	{
+		System.out.println("gossiping...");
 		for(ServerNode sn : FEServers)
 		{
 			System.out.println("FE # = " + FEServers.size());
@@ -97,7 +116,6 @@ public class FEManagementHandler implements A1Management.Iface {
 				transport.open();
 				TProtocol protocol = new TBinaryProtocol(transport);
 				A1Management.Client client = new A1Management.Client(protocol);
-				System.out.println(sn);
 				client.setServerList(BEServers, true);
 				client.setServerList(FEServers, false);
 			}catch(TException x){

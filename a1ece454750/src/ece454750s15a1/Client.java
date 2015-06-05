@@ -17,62 +17,34 @@ import org.apache.thrift.protocol.TProtocol;
 
 public class Client {
 
-    private static A1Password.Client m_passwordService;
-    private static A1Management.Client m_managementService;
-
-    private static TTransport m_passwordTransport;
-    private static TTransport m_managementTransport;
-
+	private static String m_addr;
+	private static int m_pport;
+	private static int m_mport;
+	
     public static void main(String [] args) {
-        try {
 			HashMap<String, String> params = new HashMap<String, String>();
 			for(int i = 0 ; i < args.length ; i+=2) {
 				params.put(args[i], args[i+1]);
 			}
-			String addr = params.get("-host");
-			int pport = Integer.parseInt(params.get("-pport"));
-			int mport = Integer.parseInt(params.get("-mport"));
-            m_passwordService = connectPasswordService(addr, pport);
-            m_managementService = connectManagementService(addr, mport);
+			m_addr = params.get("-host");
+			m_pport = Integer.parseInt(params.get("-pport"));
+			m_mport = Integer.parseInt(params.get("-mport"));
 
             perform();
-
-            m_passwordTransport.close();
-            m_managementTransport.close();
-        } catch (TException x) {
-            x.printStackTrace();
-        }
     }
 
-    private static A1Password.Client connectPasswordService(String addr, int port) throws TException
+    private static void perform()
     {
-        m_passwordTransport = new TSocket(addr, port);
-        m_passwordTransport.open();
-
-        TProtocol protocol = new  TBinaryProtocol(m_passwordTransport);
-        return new A1Password.Client(protocol);
-    }
-
-    private static A1Management.Client connectManagementService(String addr, int port) throws TException
-    {
-        m_managementTransport = new TSocket(addr, port);
-        m_managementTransport.open();
-
-        TProtocol protocol = new  TBinaryProtocol(m_managementTransport);
-        return new A1Management.Client(protocol);
-    }
-
-    private static void perform() throws TException
-    {
+		String hash = null;
 		while(true){
 			try {
 				System.out.print("Enter function:");
 				String input = System.console().readLine();
-				String hash = null;
 				if(input.equals("h"))
 				{
 					System.out.println("hashing.......");
-					System.out.println(hashPassword("password123", 15));
+					hash = hashPassword("password123", 15);
+					System.out.println(hash);
 				}
 				else if(input.equals("c"))
 				{
@@ -90,10 +62,8 @@ public class Client {
 					int port = Integer.parseInt(System.console().readLine());
 					System.out.println(getPerfCounters(port));
 				}
-				
-				
 			} catch (TException x) {
-				x.printStackTrace();
+				x.getMessage();
 			}
 		}
     }
@@ -101,53 +71,146 @@ public class Client {
     private static String hashPassword(String password, int logRounds) throws TException
     {
 		System.out.println("hashing with log round of " + logRounds + "...");
-        return m_passwordService.hashPassword(password, (short)logRounds);
+		TTransport m_passwordTransport = new TSocket(m_addr, m_pport);
+		try
+		{
+			m_passwordTransport.open();
+
+			TProtocol protocol = new  TBinaryProtocol(m_passwordTransport);
+			A1Password.Client client = new A1Password.Client(protocol);
+			String hash = client.hashPassword(password, (short)logRounds);
+			return hash;
+		}
+		catch(TException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			m_passwordTransport.close();
+		}
+		return "";
     }
 
     private static boolean checkPassword(String password, String hash) throws TException
     {
-        return m_passwordService.checkPassword(password, hash);
+		System.out.println("checking password...");
+		TTransport m_passwordTransport = new TSocket(m_addr, m_pport);
+		try
+		{
+			m_passwordTransport.open();
+
+			TProtocol protocol = new  TBinaryProtocol(m_passwordTransport);
+			A1Password.Client client = new A1Password.Client(protocol);
+			boolean checked = client.checkPassword(password, hash);
+			return checked;
+		}
+		catch(TException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			m_passwordTransport.close();
+		}
+		return false;
     }
 
     private static PerfCounters getPerfCounters(int port) throws TException
     {
-		TTransport transport = new TSocket("localhost", port);
-        transport.open();
-
-        TProtocol protocol = new  TBinaryProtocol(transport);
-        A1Management.Client client = new A1Management.Client(protocol);
-        PerfCounters pc = client.getPerfCounters();
-		transport.close();
+		TTransport transport = new TSocket(m_addr, m_mport);
+		PerfCounters pc = null;
+		try
+		{
+			transport.open();
+			TProtocol protocol = new  TBinaryProtocol(transport);
+			A1Management.Client client = new A1Management.Client(protocol);
+			pc = client.getPerfCounters();
+			return pc;
+		}
+		catch(TException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			transport.close();
+		}
 		return pc;
     }
     
     private static void printGroupMembers() throws TException
     {
-        List<String> ids = m_managementService.getGroupMembers();
-        for(int i = 0; i < ids.size(); i++)
-        {
-            System.out.println(ids.get(i) + ", ");
-        }
+		TTransport transport = new TSocket(m_addr, m_mport);
+		try
+		{
+			transport.open();
+			TProtocol protocol = new  TBinaryProtocol(transport);
+			A1Management.Client client = new A1Management.Client(protocol);
+			List<String> ids = client.getGroupMembers();
+			for(int i = 0; i < ids.size(); i++)
+			{
+				System.out.println(ids.get(i) + ", ");
+			}
+		}
+		catch(TException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			transport.close();
+		}
     }
 	
 	private static void printAllBEServers() throws TException
     {
-        List<ServerNode> servers = m_managementService.getAllBEServerNodes();
-		System.out.println("BE===============\n");
-        for(int i = 0; i < servers.size(); i++)
-        {
-            System.out.println(servers.get(i) + "\n");
-        }
+		TTransport transport = new TSocket(m_addr, m_mport);
+		try
+		{
+			transport.open();
+			TProtocol protocol = new  TBinaryProtocol(transport);
+			A1Management.Client client = new A1Management.Client(protocol);
+			List<ServerNode> servers = client.getAllBEServerNodes();
+			System.out.println("BE===============\n");
+			for(int i = 0; i < servers.size(); i++)
+			{
+				System.out.println(servers.get(i) + "\n");
+			}
+		}
+		catch(TException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			transport.close();
+		}
     }
 	
 	private static void printAllFEServers() throws TException
     {
-        List<ServerNode> servers = m_managementService.getAllFEServerNodes();
-		System.out.println("FE===============\n");
-        for(int i = 0; i < servers.size(); i++)
-        {
-            System.out.println(servers.get(i) + "\n");
-        }
+		TTransport transport = new TSocket(m_addr, m_mport);
+		try
+		{
+			transport.open();
+			TProtocol protocol = new  TBinaryProtocol(transport);
+			A1Management.Client client = new A1Management.Client(protocol);
+			List<ServerNode> servers = client.getAllFEServerNodes();
+			System.out.println("FE===============\n");
+			for(int i = 0; i < servers.size(); i++)
+			{
+				System.out.println(servers.get(i) + "\n");
+			}
+		}
+		catch(TException e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			transport.close();
+		}
     }
     
 }

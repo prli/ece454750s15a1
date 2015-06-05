@@ -147,8 +147,8 @@ public class BEServer {
         TProtocol protocol = new  TBinaryProtocol(transport);
         A1Management.Client client = new A1Management.Client(protocol);
 		
-		ServerNode node = new ServerNode(addr, pport, mport, ncores);
-		client.addServerNode(node, true);
+		ServerNode node = new ServerNode(addr, pport, mport, ncores, true, false);
+		client.addServerNode(node);
 		transport.close();
 	}
 }

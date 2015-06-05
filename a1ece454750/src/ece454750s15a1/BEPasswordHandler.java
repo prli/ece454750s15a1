@@ -18,16 +18,39 @@ public class BEPasswordHandler implements A1Password.Iface {
     }
 
     public String hashPassword (String password, short logRounds) throws ServiceUnavailableException {
-        m_BEManagementHandler.numRequestsReceived++;
-        String hash = bcrypt.hashpw(password, bcrypt.gensalt(logRounds));
-        m_BEManagementHandler.numRequestsCompleted++;
-        return hash;
+        try{
+			System.out.println("BE hashing begin...");
+			m_BEManagementHandler.numRequestsReceived++;
+			String hash = bcrypt.hashpw(password, bcrypt.gensalt(logRounds));
+			m_BEManagementHandler.numRequestsCompleted++;
+			System.out.println("BE hashing end...");
+			return hash;
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		throw new ServiceUnavailableException("BE service down");
     }
 
     public boolean checkPassword (String password, String hash) {
-		m_BEManagementHandler.numRequestsReceived++;
-        boolean checked = bcrypt.checkpw(password, hash);
-		m_BEManagementHandler.numRequestsCompleted++;
-		return checked;
+		if(hash == null)
+		{
+			return false;
+		}
+		try
+		{
+			System.out.println("BE checking begin...");
+			m_BEManagementHandler.numRequestsReceived++;
+			boolean checked = bcrypt.checkpw(password, hash);
+			m_BEManagementHandler.numRequestsCompleted++;
+			System.out.println("BE checking end...");
+			return checked;
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		return false;
     }
 }

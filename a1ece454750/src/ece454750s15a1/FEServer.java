@@ -161,8 +161,11 @@ public class FEServer {
 			int pport = Integer.parseInt(params.get("-pport"));
 			int mport = Integer.parseInt(params.get("-mport"));
 			int ncores = Integer.parseInt(params.get("-ncores"));
+			boolean isSeed = isSeedNode(params, seedHosts, seedPorts);
 			
-			managementHandler = new FEManagementHandler();
+			ServerNode node = new ServerNode(addr, pport, mport, ncores, false, isSeed);
+			
+			managementHandler = new FEManagementHandler(node);
             managementProcessor = new A1Management.Processor(managementHandler);
 			
             passwordHandler = new FEPasswordHandler(managementHandler);
@@ -176,13 +179,14 @@ public class FEServer {
             new Thread(passwordThread).start();
             new Thread(managementThread).start();
 			
-			if(!isSeedNode(params, seedHosts, seedPorts))
-			{
-				joinCluster(addr, pport, mport, ncores, seedHosts.get(0), seedPorts.get(0));
-			}else
+			if(isSeed)
 			{
 				GossipProtocolThread gpt = new GossipProtocolThread(seedHosts, seedPorts);
-				new Thread(gpt).start();
+				//new Thread(gpt).start();
+			}
+			else
+			{
+				joinCluster(node, seedHosts.get(0), seedPorts.get(0));
 			}
         } catch (Exception x) {
             x.printStackTrace();
@@ -204,15 +208,14 @@ public class FEServer {
     }
 	
 	//joins seed FE
-	public static void joinCluster(String addr, int pport, int mport, int ncores, String seedHost, int seedPort) throws TException
+	public static void joinCluster(ServerNode node, String seedHost, int seedPort) throws TException
 	{
 		TTransport transport = new TSocket(seedHost, seedPort);
         transport.open();
 
         TProtocol protocol = new  TBinaryProtocol(transport);
         A1Management.Client client = new A1Management.Client(protocol);
-		ServerNode node = new ServerNode(addr, pport, mport, ncores);
-		client.addServerNode(node, false);
+		client.addServerNode(node);
 		transport.close();
 	}
 }

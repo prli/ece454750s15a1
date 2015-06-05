@@ -24,6 +24,7 @@ public class FEPasswordHandler implements A1Password.Iface {
     }
 
     public String hashPassword (String password, short logRounds) throws ServiceUnavailableException {
+		System.out.println("FE hashing begin...");
 		while(m_FEManagementHandler.BEServers.size() > 0)
 		{
 			//determine addr and port with load balancing
@@ -38,23 +39,26 @@ public class FEPasswordHandler implements A1Password.Iface {
 			TTransport m_passwordTransport = new TSocket(addr, port);
 			try{
 				m_passwordTransport.open();
-
 				TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
 				A1Password.Client BEServer = new A1Password.Client(protocol);
 				m_FEManagementHandler.numRequestsReceived++;
 				String hash = BEServer.hashPassword(password, logRounds);
 				m_FEManagementHandler.numRequestsCompleted++;
+				System.out.println("FE hashing end...");
 				return hash;
 			}catch(TException x){
-				System.out.println("Cant hash, server is down: " + bestBE);
-				m_FEManagementHandler.BEServers.remove(bestBE);
+				System.out.println("Cant hash, server is down: ");
+				x.printStackTrace();
+				m_FEManagementHandler.removeServerNode(bestBE);
 			}finally{
 				m_passwordTransport.close();
 			}
 		}
+		throw new ServiceUnavailableException("no service");
     }
 
     public boolean checkPassword (String password, String hash) {
+		System.out.println("FE checking begin...");
 		while(m_FEManagementHandler.BEServers.size() > 0)
 		{
 			//determine addr and port with load balancing
@@ -65,16 +69,17 @@ public class FEPasswordHandler implements A1Password.Iface {
 			TTransport m_passwordTransport = new TSocket(addr, port);
 			try{
 				m_passwordTransport.open();
-
 				TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
 				A1Password.Client BEServer = new A1Password.Client(protocol);
 				m_FEManagementHandler.numRequestsReceived++;
 				boolean checked = BEServer.checkPassword(password, hash);
 				m_FEManagementHandler.numRequestsCompleted++;
+				System.out.println("FE checking end...");
 				return checked;
 			}catch(TException x){
-				System.out.println("Cant check, server is down: " + bestBE);
-				m_FEManagementHandler.BEServers.remove(bestBE);
+				System.out.println("Cant check, server is down: ");
+				x.printStackTrace();
+				m_FEManagementHandler.removeServerNode(bestBE);
 			}finally{
 				m_passwordTransport.close();
 			}

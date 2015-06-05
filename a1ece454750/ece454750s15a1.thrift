@@ -14,7 +14,8 @@ struct ServerNode {
   2: i32 pport,
   3: i32 mport,
   4: i32 ncores,
-  5: optional i32 usedcores = 0
+  5: bool isBE,
+  6: bool isSeed
 }
 
 exception ServiceUnavailableException {
@@ -29,8 +30,8 @@ service A1Password {
 service A1Management {
    PerfCounters getPerfCounters(),
    list<string> getGroupMembers(),
-   void addServerNode(1:ServerNode node, 2:bool isBE),
-   void removeServerNode(1:ServerNode node, 2:bool isBE),
+   void addServerNode(1:ServerNode node),
+   void removeServerNode(1:ServerNode node),
    void setServerList(1:list<ServerNode> servers, 2:bool isBE),
    void gossipServerList(),
    list<ServerNode> getAllBEServerNodes(),

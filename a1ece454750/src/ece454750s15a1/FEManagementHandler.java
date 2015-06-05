@@ -1,6 +1,6 @@
 package ece454750s15a1;
 
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransport;
@@ -14,8 +14,8 @@ import ece454750s15a1.*;
 
 public class FEManagementHandler implements A1Management.Iface {
 
-	public ArrayList<ServerNode> BEServers;
-	public ArrayList<ServerNode> FEServers;
+	public CopyOnWriteArrayList<ServerNode> BEServers;
+	public CopyOnWriteArrayList<ServerNode> FEServers;
 	
 	private long m_startTime;
 	public int numRequestsReceived;
@@ -24,10 +24,13 @@ public class FEManagementHandler implements A1Management.Iface {
 	private int m_serverIndex;
 	private int m_requestCount;
 	
-    public FEManagementHandler() {
+	private ServerNode m_serverNode;
+    public FEManagementHandler(ServerNode fe) {
 		m_startTime = System.currentTimeMillis();
-		this.BEServers = new ArrayList<ServerNode>();
-		this.FEServers = new ArrayList<ServerNode>();
+		this.BEServers = new CopyOnWriteArrayList<ServerNode>();
+		this.FEServers = new CopyOnWriteArrayList<ServerNode>();
+		this.m_serverNode = fe;
+		FEServers.add(m_serverNode);
     }
 
     public PerfCounters getPerfCounters() {
@@ -40,10 +43,10 @@ public class FEManagementHandler implements A1Management.Iface {
         return null;
     }
 	
-	public void addServerNode(ServerNode node, boolean isBE)
+	public void addServerNode(ServerNode node)
 	{
 		System.out.println("adding...");
-		if(isBE)
+		if(node.isBE)
 		{
 			BEServers.add(node);
 		}
@@ -51,13 +54,12 @@ public class FEManagementHandler implements A1Management.Iface {
 		{
 			FEServers.add(node);
 		}
-		gossipServerList();
 	}
 	
-	public void removeServerNode(ServerNode node, boolean isBE)
+	public void removeServerNode(ServerNode node)
 	{
 		System.out.println("removing...");
-		if(isBE)
+		if(node.isBE)
 		{
 			BEServers.remove(node);
 		}
@@ -65,18 +67,17 @@ public class FEManagementHandler implements A1Management.Iface {
 		{
 			FEServers.remove(node);
 		}
-		gossipServerList();
 	}
 	
 	public void setServerList(List<ServerNode> list, boolean isBE)
 	{
 		if (isBE)
 		{
-			BEServers = new ArrayList<ServerNode>(list);
+			BEServers = new CopyOnWriteArrayList<ServerNode>(list);
 		}
 		else
 		{
-			FEServers = new ArrayList<ServerNode>(list);
+			FEServers = new CopyOnWriteArrayList<ServerNode>(list);
 		}
 		
 	}
@@ -85,6 +86,12 @@ public class FEManagementHandler implements A1Management.Iface {
 	{
 		for(ServerNode sn : FEServers)
 		{
+			System.out.println("FE # = " + FEServers.size());
+			System.out.println("BE # = " + BEServers.size());
+			if(sn.equals(m_serverNode))
+			{
+				continue;
+			}
 			TTransport transport = new TSocket(sn.host, sn.mport);
 			try{
 				transport.open();
@@ -103,21 +110,31 @@ public class FEManagementHandler implements A1Management.Iface {
 	
 	public ServerNode loadBalancing()
 	{
-		while(BEServers.size() > 0)
+		System.out.println("load balancing begin...");
+		m_serverIndex = m_serverIndex%BEServers.size();
+		try
 		{
-			ServerNode sn = BEServers.get(m_serverIndex);
-			if(m_requestCount < sn.ncores)
+			while(BEServers.size() > 0)
 			{
-				m_requestCount++;
-				return sn;
+				ServerNode sn = BEServers.get(m_serverIndex);
+				if(m_requestCount < sn.ncores)
+				{
+					m_requestCount++;
+					System.out.println("load balancing end...");
+					return sn;
+				}
+				else
+				{
+					m_requestCount = 0;
+				}
+				m_serverIndex = (m_serverIndex + 1)%BEServers.size();
 			}
-			else
-			{
-				m_requestCount = 0;
-			}
-			m_serverIndex = (m_serverIndex + 1)%BEServers.size();
+			m_requestCount = 0;
 		}
-		m_requestCount = 0;
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 		return null;
 	}
 	

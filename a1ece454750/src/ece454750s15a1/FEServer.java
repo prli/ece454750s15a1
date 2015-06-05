@@ -73,6 +73,42 @@ public class FEServer {
         }
     }
 	
+	public static class GossipProtocolThread implements Runnable {
+		
+		private ArrayList<String> seedHosts;
+		private ArrayList<Integer> seedPorts;
+		public GossipProtocolThread(ArrayList<String> seedHosts, ArrayList<Integer> seedPorts) 
+		{
+			this.seedHosts = seedHosts;
+			this.seedPorts = seedPorts;
+		}
+
+		public void run() {
+			while(true) {
+				System.out.println("gossiping");
+				try
+				{
+					TTransport transport = new TSocket(seedHosts.get(0), seedPorts.get(0));
+					transport.open();
+
+					TProtocol protocol = new  TBinaryProtocol(transport);
+					A1Management.Client client = new A1Management.Client(protocol);
+					client.gossipServerList();
+					transport.close();
+					Thread.sleep(100);
+				}
+				catch(TException e)
+				{
+					
+				}
+				catch(InterruptedException e)
+				{
+				
+				}
+			}
+		}
+	}
+
 	public static FEPasswordHandler passwordHandler;
     public static FEManagementHandler managementHandler;
 
@@ -140,15 +176,14 @@ public class FEServer {
             new Thread(passwordThread).start();
             new Thread(managementThread).start();
 			
-
 			if(!isSeedNode(params, seedHosts, seedPorts))
 			{
 				joinCluster(addr, pport, mport, ncores, seedHosts.get(0), seedPorts.get(0));
 			}else
 			{
-				managementHandler.FEServers.add(new ServerNode(addr, pport, mport, ncores));
+				GossipProtocolThread gpt = new GossipProtocolThread(seedHosts, seedPorts);
+				new Thread(gpt).start();
 			}
-			
         } catch (Exception x) {
             x.printStackTrace();
         }
@@ -172,7 +207,6 @@ public class FEServer {
 	public static void joinCluster(String addr, int pport, int mport, int ncores, String seedHost, int seedPort) throws TException
 	{
 		TTransport transport = new TSocket(seedHost, seedPort);
-		System.out.println(addr);
         transport.open();
 
         TProtocol protocol = new  TBinaryProtocol(transport);

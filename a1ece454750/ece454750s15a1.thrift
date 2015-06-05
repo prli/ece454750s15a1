@@ -31,7 +31,9 @@ service A1Management {
    list<string> getGroupMembers(),
    void addServerNode(1:ServerNode node, 2:bool isBE),
    void removeServerNode(1:ServerNode node, 2:bool isBE),
-   list<ServerNode> getAllBEServerNodes()
+   void setServerList(1:list<ServerNode> servers, 2:bool isBE),
+   void gossipServerList(),
+   list<ServerNode> getAllBEServerNodes(),
    list<ServerNode> getAllFEServerNodes()
 }
 

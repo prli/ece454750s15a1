@@ -1,5 +1,6 @@
 package ece454750s15a1;
 
+import java.util.*;
 import java.util.List;
 import java.util.Arrays;
 
@@ -24,8 +25,15 @@ public class Client {
 
     public static void main(String [] args) {
         try {
-            m_passwordService = connectPasswordService("localhost", 14950);
-            m_managementService = connectManagementService("localhost", 24950);
+			HashMap<String, String> params = new HashMap<String, String>();
+			for(int i = 0 ; i < args.length ; i+=2) {
+				params.put(args[i], args[i+1]);
+			}
+			String addr = params.get("-host");
+			int pport = Integer.parseInt(params.get("-pport"));
+			int mport = Integer.parseInt(params.get("-mport"));
+            m_passwordService = connectPasswordService(addr, pport);
+            m_managementService = connectManagementService(addr, mport);
 
             perform();
 
@@ -56,14 +64,38 @@ public class Client {
 
     private static void perform() throws TException
     {
-        try {
-            System.out.println("hash 1 = " + hashPassword("password123", 20));
-            System.out.println(getPerfCounters());
-			printAllFEServers();
-			printAllBEServers();
-        } catch (TException x) {
-            x.printStackTrace();
-        }
+		while(true){
+			try {
+				System.out.print("Enter function:");
+				String input = System.console().readLine();
+				String hash = null;
+				if(input.equals("h"))
+				{
+					System.out.println("hashing.......");
+					System.out.println(hashPassword("password123", 15));
+				}
+				else if(input.equals("c"))
+				{
+					System.out.println("checking.......");
+					System.out.println(checkPassword("password123", hash));
+				}
+				else if(input.equals("a"))
+				{
+					printAllFEServers();
+					printAllBEServers();
+				}
+				else if(input.equals("p"))
+				{
+					System.out.print("Enter port:");
+					int port = Integer.parseInt(System.console().readLine());
+					System.out.println(getPerfCounters(port));
+				}
+				
+				
+			} catch (TException x) {
+				x.printStackTrace();
+			}
+		}
     }
 
     private static String hashPassword(String password, int logRounds) throws TException
@@ -77,9 +109,16 @@ public class Client {
         return m_passwordService.checkPassword(password, hash);
     }
 
-    private static PerfCounters getPerfCounters() throws TException
+    private static PerfCounters getPerfCounters(int port) throws TException
     {
-        return m_managementService.getPerfCounters();
+		TTransport transport = new TSocket("localhost", port);
+        transport.open();
+
+        TProtocol protocol = new  TBinaryProtocol(transport);
+        A1Management.Client client = new A1Management.Client(protocol);
+        PerfCounters pc = client.getPerfCounters();
+		transport.close();
+		return pc;
     }
     
     private static void printGroupMembers() throws TException

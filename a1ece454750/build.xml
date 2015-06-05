@@ -1,4 +1,4 @@
-<project name="ece454750s15a1" default="start" basedir=".">
+<project name="ece454750s15a1" default="build" basedir=".">
     
     <description>assignment1</description>
     
@@ -38,31 +38,16 @@
         <javac source="1.6" target="1.6" srcdir="${src}" destdir="${build}" classpathref="build.classpath" />
     </target>
     
-    <target name="test" depends="start" />
+    <target name="test" depends="build" />
     
-    <target name="start" description="Start assignment1" depends="compile" >
+    <target name="build" description="build assignment1" depends="compile" >
         <jar jarfile="ece454750s15a1.jar" basedir="${build}"/>
-        <parallel>
-            <java classname="FEServer" fork="true" timeout="10000"
-                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
-            </java>
-            <java classname="BEServer" fork="true" timeout="10000"
-                classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
-            </java>
-            <sequential>
-                <sleep seconds="2"/>
-                <echo>ece454750s15a1 client simple:</echo>
-                <java classname="Client"
-                    classpathref="ece454750s15a1.classpath" failonerror="true">
-                    <arg line="simple"/>
-                </java>
-            </sequential>
-        </parallel>
     </target>
     
     <!--Create a cluster of FEs and BEs-->
     <target name="startCluster" description="Start assignment1" depends="compile" >
         <jar jarfile="ece454750s15a1.jar" basedir="${build}"/>
+		<echo>ece454750s15a1 startCluster:</echo>
         <parallel>
             
             <!--FE Seed 1-->
@@ -113,11 +98,7 @@
                 classpathref="ece454750s15a1.classpath" failonerror="false" output="${build}/log/ece454750s15a1.log">
                 <arg line="-host ecelinux6 –pport 2098 –mport 3245 –ncores 2 -seeds ecelinux11:1497,ecelinux12:3453"/>
             </java>
-            
-            
-            
-            
-            
+
             <sequential>
                 <sleep seconds="2"/>
                 <echo>ece454750s15a1 client simple:</echo>

@@ -24,73 +24,63 @@ public class FEPasswordHandler implements A1Password.Iface {
     }
 
     public String hashPassword (String password, short logRounds) throws ServiceUnavailableException {
-        //determine addr and port with load balancing
-        ServerNode bestBE = loadBalancing();
-		if(bestBE == null)
+		while(m_FEManagementHandler.BEServers.size() > 0)
 		{
-			throw new ServiceUnavailableException("no service");
-		}
-		String addr = bestBE.host;
-        int port = bestBE.pport;
-		
-        TTransport m_passwordTransport = new TSocket(addr, port);
-        try{
-            m_passwordTransport.open();
+			//determine addr and port with load balancing
+			ServerNode bestBE = m_FEManagementHandler.loadBalancing();
+			if(bestBE == null)
+			{
+				throw new ServiceUnavailableException("no service");
+			}
+			String addr = bestBE.host;
+			int port = bestBE.pport;
+			
+			TTransport m_passwordTransport = new TSocket(addr, port);
+			try{
+				m_passwordTransport.open();
 
-            TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
-            A1Password.Client BEServer = new A1Password.Client(protocol);
-			m_FEManagementHandler.numRequestsReceived++;
-            String hash = BEServer.hashPassword(password, logRounds);
-			m_FEManagementHandler.numRequestsCompleted++;
-			return hash;
-        }catch(TException x){
-			m_FEManagementHandler.BEServers.remove(bestBE);
-            return hashPassword(password, logRounds);
-        }finally{
-            m_passwordTransport.close();
-        }
+				TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
+				A1Password.Client BEServer = new A1Password.Client(protocol);
+				m_FEManagementHandler.numRequestsReceived++;
+				String hash = BEServer.hashPassword(password, logRounds);
+				m_FEManagementHandler.numRequestsCompleted++;
+				return hash;
+			}catch(TException x){
+				System.out.println("Cant hash, server is down: " + bestBE);
+				m_FEManagementHandler.BEServers.remove(bestBE);
+			}finally{
+				m_passwordTransport.close();
+			}
+		}
     }
 
     public boolean checkPassword (String password, String hash) {
-        //determine addr and port with load balancing
-        ServerNode bestBE = loadBalancing();
-		String addr = bestBE.host;
-        int port = bestBE.pport;
+		while(m_FEManagementHandler.BEServers.size() > 0)
+		{
+			//determine addr and port with load balancing
+			ServerNode bestBE = m_FEManagementHandler.loadBalancing();
+			String addr = bestBE.host;
+			int port = bestBE.pport;
 
-        TTransport m_passwordTransport = new TSocket(addr, port);
-        try{
-            m_passwordTransport.open();
+			TTransport m_passwordTransport = new TSocket(addr, port);
+			try{
+				m_passwordTransport.open();
 
-            TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
-            A1Password.Client BEServer = new A1Password.Client(protocol);
-			m_FEManagementHandler.numRequestsReceived++;
-            boolean checked = BEServer.checkPassword(password, hash);
-			m_FEManagementHandler.numRequestsCompleted++;
-            return checked;
-        }catch(TException x){
-            m_FEManagementHandler.BEServers.remove(bestBE);
-            x.printStackTrace();
-        }finally{
-            m_passwordTransport.close();
-        }
+				TProtocol protocol = new TBinaryProtocol(m_passwordTransport);
+				A1Password.Client BEServer = new A1Password.Client(protocol);
+				m_FEManagementHandler.numRequestsReceived++;
+				boolean checked = BEServer.checkPassword(password, hash);
+				m_FEManagementHandler.numRequestsCompleted++;
+				return checked;
+			}catch(TException x){
+				System.out.println("Cant check, server is down: " + bestBE);
+				m_FEManagementHandler.BEServers.remove(bestBE);
+			}finally{
+				m_passwordTransport.close();
+			}
+		}
 		return false;
     }
 	
-	private ServerNode loadBalancing()
-	{
-		//arraylist search based on free cores
-		ServerNode bestBE = null;
-		for(ServerNode s : m_FEManagementHandler.BEServers)
-		{
-			if(bestBE == null)
-			{
-				bestBE = s;
-			}
-			else if(s.ncores - s.usedcores > bestBE.ncores - bestBE.usedcores)
-			{
-				bestBE = s;
-			}
-		}
-		return bestBE;
-	}
+	
 }

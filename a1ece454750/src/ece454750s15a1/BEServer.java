@@ -142,7 +142,6 @@ public class BEServer {
 	public static void joinCluster(String addr, int pport, int mport, int ncores, String seedHost, int seedPort) throws TException
 	{
 		TTransport transport = new TSocket(seedHost, seedPort);
-		System.out.println(addr);
         transport.open();
 
         TProtocol protocol = new  TBinaryProtocol(transport);

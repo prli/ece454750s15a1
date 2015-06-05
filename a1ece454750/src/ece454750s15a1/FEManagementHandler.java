@@ -48,10 +48,12 @@ public class FEManagementHandler implements A1Management.Iface {
 		System.out.println("adding...");
 		if(node.isBE)
 		{
+            System.out.println("-- Adding BE:"+node);
 			BEServers.add(node);
 		}
 		else
 		{
+            System.out.println("-- Adding FE:"+node);
 			FEServers.add(node);
 		}
 	}
@@ -61,10 +63,12 @@ public class FEManagementHandler implements A1Management.Iface {
 		System.out.println("removing...");
 		if(node.isBE)
 		{
+            System.out.println("-- Removing BE:"+node);
 			BEServers.remove(node);
 		}
 		else
 		{
+            System.out.println("-- Removing FE:"+node);
 			FEServers.remove(node);
 		}
 	}

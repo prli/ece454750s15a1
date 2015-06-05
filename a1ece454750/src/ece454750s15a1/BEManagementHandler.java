@@ -28,24 +28,11 @@ public class BEManagementHandler implements A1Management.Iface {
     public List<String> getGroupMembers() {
         return groupMembers;
     }
-    
-    public void addServerNode(ServerNode node, boolean isBE)
-    {
-		return;
-    }
-	
-	public void removeServerNode(ServerNode node, boolean isBE)
-    {
-        return;
-    }
-    
-    public List<ServerNode> getAllFEServerNodes()
-    {
-        return null;
-    }
-    
-    public List<ServerNode> getAllBEServerNodes()
-    {
-        return null;
-    }
+    public void gossipServerList(){}
+    public void setServerList(List<ServerNode> list, boolean isBE){}
+    public void addServerNode(ServerNode node){}
+    public void removeServerNode(ServerNode node){}
+    public ServerNode loadBalancing(){return null;}
+    public List<ServerNode> getAllFEServerNodes(){return null;}
+    public List<ServerNode> getAllBEServerNodes(){return null;}
 }

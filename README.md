@@ -3,17 +3,17 @@
 Learning objectives
 To gain hands-on experience with Apache Thrift:
 
-  •defining and implementing RPC interfaces
+    •defining and implementing RPC interfaces
   
-  •selecting Thrift protocols and server implementations
+    •selecting Thrift protocols and server implementations
   
 To develop a basic understanding of scalability:
 
-  •request level parallelism (RLP)
+    •request level parallelism (RLP)
   
-  •load balancingTo develop a basic understanding of fault tolerance:
+    •load balancingTo develop a basic understanding of fault tolerance:
   
-  •detecting failures
+    •detecting failures
   
-  •maintaining service availability despite server crashes
+    •maintaining service availability despite server crashes
   

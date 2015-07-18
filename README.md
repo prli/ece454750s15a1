@@ -1,6 +1,7 @@
 # ece454750s15a1
 
 Learning objectives
+
 To gain hands-on experience with Apache Thrift:
 
     •defining and implementing RPC interfaces
